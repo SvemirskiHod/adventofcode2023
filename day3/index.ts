@@ -1,3 +1,6 @@
+const gears = {}
+
+
 const input = `.......497...........................858...923...128..................227..801........487.....664...........................................
 436........765..............140.......+....................859.............*.........+.................960........668.......................
 ...*982...........=..........=....203......266.263...375*....=...402....691..-....................*..........575....................13......
@@ -139,16 +142,6 @@ const input = `.......497...........................858...923...128.............
 ...594............*...$.654.....+.........*........................84.*....7...231.$102.......286.......*760....817.......719.........*.....
 ..................620............806......866.................559......440...........................310...........................590..547.`;
 
-// const input = `467..114..
-// ...*......
-// ..35..633.
-// ......#...
-// 617*......
-// .....+.58.
-// ..592.....
-// ......755.
-// ...$.*....
-// .664.598..`
 
 const parseMatrix = (string: string): { matrix: string[][], xLength: number, yLength: number } => {
    const lines = string.split('\n');
@@ -185,18 +178,96 @@ const parseNumbers = (line: string[]): { start: number, end: number }[] => {
    })
    return numbers;
 }
+// part 1
+// const run = () => {
+//    const { matrix, xLength, yLength } = parseMatrix(input)
+//    let score = 0
 
+//    matrix.forEach((line, lineIndex) => {
+//       const numbers = parseNumbers(line)
+
+//       const validNumberHashes = numbers.filter((numberCoordinates) => {
+
+//          const left = isSymbol(line[numberCoordinates.start - 1])
+//          const right = isSymbol(line[numberCoordinates.end + 1])
+//          let up = false
+//          let down = false
+
+//          const lineAbove = matrix[lineIndex - 1]
+//          const lineBelow = matrix[lineIndex + 1]
+
+//          for (let i = numberCoordinates.start; i <= numberCoordinates.end; i++) {
+
+//             if (lineAbove) {
+//                if (isSymbol(lineAbove[i - 1]) || isSymbol(lineAbove[i]) || isSymbol(lineAbove[i + 1])) {
+//                   up = true
+//                   break;
+//                }
+//             }
+//             if (lineBelow) {
+//                if (isSymbol(lineBelow[i - 1]) || isSymbol(lineBelow[i]) || isSymbol(lineBelow[i + 1])) {
+//                   down = true
+//                   break;
+//                }
+//             }
+//          }
+
+//          const isValid = left || right || up || down
+//          return isValid
+//       })
+
+//       console.log({ validNumberHashes })
+
+//       validNumberHashes.forEach(hash => {
+//          const number = Number(line.slice(hash.start, hash.end + 1).join(''))
+//          console.log({ number })
+//          score += Number(line.slice(hash.start, hash.end + 1).join(''))
+//       })
+
+
+//    })
+//    console.log({ score })
+
+// }
+
+const mapGear = (coordinates, number) => {
+   console.log({ gears, coordinates, number })
+   if (gears[coordinates]) {
+      if (!gears[coordinates].includes(number)) {
+         gears[coordinates].push(number)
+      }
+   } else {
+      gears[coordinates] = [number]
+   }
+}
+
+
+
+// part 2
 const run = () => {
    const { matrix, xLength, yLength } = parseMatrix(input)
    let score = 0
+
+   const checkSymbolAndMapGear = (y, x, number) => {
+      const char = matrix[y] && matrix[y][x]
+      const _isSymbol = isSymbol(char)
+      if (_isSymbol && char === '*') {
+         mapGear(`${y}${x}`, number)
+      }
+
+      return _isSymbol
+   }
 
    matrix.forEach((line, lineIndex) => {
       const numbers = parseNumbers(line)
 
       const validNumberHashes = numbers.filter((numberCoordinates) => {
 
-         const left = isSymbol(line[numberCoordinates.start - 1])
-         const right = isSymbol(line[numberCoordinates.end + 1])
+         const number = Number(line.slice(numberCoordinates.start, numberCoordinates.end + 1).join(''))
+
+
+         const left = checkSymbolAndMapGear(lineIndex, numberCoordinates.start - 1, number)
+         const right = checkSymbolAndMapGear(lineIndex, numberCoordinates.end + 1, number)
          let up = false
          let down = false
 
@@ -206,15 +277,13 @@ const run = () => {
          for (let i = numberCoordinates.start; i <= numberCoordinates.end; i++) {
 
             if (lineAbove) {
-               if (isSymbol(lineAbove[i - 1]) || isSymbol(lineAbove[i]) || isSymbol(lineAbove[i + 1])) {
+               if (checkSymbolAndMapGear(lineIndex - 1, i - 1, number) || checkSymbolAndMapGear(lineIndex - 1, i, number) || checkSymbolAndMapGear(lineIndex - 1, i + 1, number)) {
                   up = true
-                  break;
                }
             }
             if (lineBelow) {
-               if (isSymbol(lineBelow[i - 1]) || isSymbol(lineBelow[i]) || isSymbol(lineBelow[i + 1])) {
+               if (checkSymbolAndMapGear(lineIndex + 1, i - 1, number) || checkSymbolAndMapGear(lineIndex + 1, i, number) || checkSymbolAndMapGear(lineIndex + 1, i + 1, number)) {
                   down = true
-                  break;
                }
             }
          }
@@ -223,18 +292,22 @@ const run = () => {
          return isValid
       })
 
-      console.log({ validNumberHashes })
-
       validNumberHashes.forEach(hash => {
          const number = Number(line.slice(hash.start, hash.end + 1).join(''))
-         console.log({ number })
+         // console.log({ number })
          score += Number(line.slice(hash.start, hash.end + 1).join(''))
       })
 
 
    })
-   console.log({ score })
 
+   const gearScore = Object.keys(gears).reduce((acc, key) => {
+      if (gears[key].length === 2) {
+         return acc + (gears[key][0] * gears[key][1])
+      }
+      return acc
+   }, 0)
+   console.log({ gearScore })
 }
 
 run()
